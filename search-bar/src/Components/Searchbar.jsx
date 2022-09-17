@@ -1,23 +1,72 @@
 
 
-import React from 'react';
+import React, { useRef } from 'react';
 import { useEffect } from 'react';
 import { useState } from 'react';
 import styled from "styled-components"
+import {useThrottle} from "use-throttle"
 const Searchbar = ({setQuery,suggestion}) => {
    const [inputText,setInputText]=useState("")
    const [active,setActive]=useState(0)
+  //for scroll
+  const scrollRef=useRef();
 
    const handleInputText= (e)=>{
     setInputText(e.target.value)
    }
+ 
+   const handleActivesuggestion=(e)=>{
+    switch(e.keyCode){
+        //up arrow
+        case 38:
+            if(active===1){
+                scrollRef.current.scrollTop=suggestion.length*22
+                setActive(suggestion.length)
+            }
+            if(active<=suggestion.length-3)
+            {
+                scrollRef.current.scrollTop-=22;
+  
+            }
+            setActive((prev)=>prev-1)
 
+            break;
+               
+    //down arrow
+            case 40:
+                if(active===suggestion.length){
+                    scrollRef.current.scrollTop=0;
+                    setActive(1)
+                }
+                if(active>=4){
+                    scrollRef.current.scrollTop +=22
+
+                }
+                setActive((prev)=>prev+1)
+
+            break;
+
+             
+
+        default:
+            return;
+    }
+   }
+ 
+   const throttle =useThrottle(inputText,1000)
    useEffect(()=>{
-     setQuery(inputText)
-   },[inputText,setQuery])
+    setQuery(throttle)
+   },[inputText,throttle])
+
+
+//    useEffect(()=>{
+//      setQuery(inputText)
+//    },[inputText,setQuery])
+
+
     return (
         <div>
-            <Wrapper>
+            <Wrapper onKeyUp={handleActivesuggestion}>
             <SearchbarWrapper>
             <Input value={inputText} onChange={handleInputText} />
             </SearchbarWrapper>
@@ -26,7 +75,8 @@ const Searchbar = ({setQuery,suggestion}) => {
                 suggestion.map((item,index)=>{
                     return(
                         <div key={index} onMouseOver={()=>{
-                               setActive(index+1) 
+                            // console.log("current",index) 
+                            setActive(index+1) 
                         }}>
                                 {item}
                         </div>
